@@ -1,8 +1,11 @@
 package test.example.springboot.test.demo.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import test.example.springboot.test.demo.Event.EmployeeCreatedEvent;
 import test.example.springboot.test.demo.Model.Employee;
 import test.example.springboot.test.demo.Service.EmployeeService;
 import java.util.List;
@@ -15,6 +18,9 @@ public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
@@ -22,7 +28,9 @@ public class EmployeeController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Employee createEmployee(@RequestBody Employee employee){
-        return employeeService.saveEmployee(employee);
+        Employee createdEmployee = employeeService.saveEmployee(employee);
+        eventPublisher.publishEvent(new EmployeeCreatedEvent(this, createdEmployee));
+        return createdEmployee;
     }
 
     @GetMapping

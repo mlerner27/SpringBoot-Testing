@@ -1,6 +1,9 @@
 package test.example.springboot.test.demo.Service.Impl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import test.example.springboot.test.demo.Client.CallbackClientService;
 import test.example.springboot.test.demo.Model.Employee;
 import test.example.springboot.test.demo.Repository.EmployeeRepository;
 import test.example.springboot.test.demo.Service.EmployeeService;
@@ -13,18 +16,26 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+    @Autowired
+    private CallbackClientService callbackClientService;
+
+    // dependency injection example
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, CallbackClientService callbackClientService) {
         this.employeeRepository = employeeRepository;
+        this.callbackClientService = callbackClientService;
     }
 
     @Override
     public Employee saveEmployee(Employee employee) {
-
         Optional<Employee> savedEmployee = employeeRepository.findByEmail(employee.getEmail());
-        if(savedEmployee.isPresent()){
-            throw new RuntimeException("Employee already exist with given email:" + employee.getEmail());
+        if (savedEmployee.isPresent()) {
+            throw new RuntimeException("Employee already exists with given email: " + employee.getEmail());
         }
-        return employeeRepository.save(employee);
+        Employee saved = employeeRepository.save(employee);
+        System.out.println("Employee saved: " + saved);
+        this.callbackClientService.notifyExternalService(saved);
+        System.out.println("notifyExternalService method called");
+        return saved;
     }
 
     @Override

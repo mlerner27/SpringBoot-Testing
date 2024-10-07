@@ -5,15 +5,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+
+import test.example.springboot.test.demo.Client.CallbackClientService;
+import test.example.springboot.test.demo.Event.EmployeeCreatedEvent;
 import test.example.springboot.test.demo.Model.Employee;
 import test.example.springboot.test.demo.Repository.EmployeeRepository;
 import test.example.springboot.test.demo.Service.Impl.EmployeeServiceImpl;
 import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 
 
@@ -23,6 +29,9 @@ public class EmployeeServiceUnitTests {
 
     @Mock
     private EmployeeRepository employeeRepository;
+
+    @Mock
+    private CallbackClientService callbackClientService;
 
     @InjectMocks
     private EmployeeServiceImpl employeeService;
@@ -47,9 +56,14 @@ public class EmployeeServiceUnitTests {
     public void saveEmployeeTest(){
         // precondition
         given(employeeRepository.save(employee)).willReturn(employee);
+        //willDoNothing().given(callbackClientService).notifyExternalService(any(Employee.class));
 
         //action
+        System.out.println("CallbackClientService mock instance: " + callbackClientService);
         Employee savedEmployee = employeeService.saveEmployee(employee);
+
+        // Verify that the client made a callback
+        verify(callbackClientService).notifyExternalService(savedEmployee);
 
         // verify the output
         System.out.println(savedEmployee);
